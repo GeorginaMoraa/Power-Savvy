@@ -1,4 +1,4 @@
-# Power Savvy
+# powersavvy
 
 A new Flutter project.
 

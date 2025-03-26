@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class UsageScreen extends StatefulWidget {
+  const UsageScreen({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  _UsageScreenState createState() => _UsageScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _UsageScreenState extends State<UsageScreen> {
   double currentUsage = 0.0;
   double billEstimate = 0.0;
 
@@ -19,22 +20,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     fetchRealTimeData(); // Start the process to trigger real-time data update
   }
 
+  // Fetch the Bearer token from SharedPreferences
+  Future<String?> getBearerToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('access_token'); // Fetch the token saved under the key 'token'
+  }
+
   // Trigger the real-time data update by calling the POST API
   Future<void> triggerRealTimeUpdate() async {
     final url = Uri.parse(
         'https://power-savvy-backend.onrender.com/api/report/update_realtime'); // Your actual endpoint
 
     try {
-      final response = await http.post(url);
+      final token = await getBearerToken(); // Get the token from SharedPreferences
+      if (token == null) {
+        showSnackbar('Token not found. Please log in again.');
+        return;
+      }
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token', // Pass the token as a Bearer token
+        },
+      );
+
       if (response.statusCode == 200) {
-        print('Real-time data update triggered successfully.');
         fetchRealTimeData(); // Proceed to fetch real-time data after the update
       } else {
-        print('Failed to trigger real-time data update');
         showSnackbar('Failed to trigger real-time data update: ${response.reasonPhrase}');
       }
     } catch (error) {
-      print('Error triggering real-time data update: $error');
       showSnackbar('Error: $error');
     }
   }
@@ -44,7 +60,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final url = Uri.parse(
         'https://power-savvy-backend.onrender.com/api/report/consumption/realtime'); // Your actual API URL
     try {
-      final response = await http.get(url);
+      final token = await getBearerToken(); // Get the token from SharedPreferences
+      if (token == null) {
+        showSnackbar('Token not found. Please log in again.');
+        return;
+      }
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token', // Pass the token as a Bearer token
+        },
+      );
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -52,11 +80,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
         fetchBillEstimate();  // Call the bill estimate function after fetching usage data
       } else {
-        print('Failed to load data');
         showSnackbar('Failed to fetch real-time data: ${response.reasonPhrase}');
       }
     } catch (error) {
-      print('Error fetching real-time data: $error');
       showSnackbar('Error: $error');
     }
   }
@@ -71,10 +97,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
 
     try {
+      final token = await getBearerToken(); // Get the token from SharedPreferences
+      if (token == null) {
+        showSnackbar('Token not found. Please log in again.');
+        return;
+      }
+
       final response = await http.post(
         url,
         body: json.encode(requestData),
-        headers: {'Content-Type': 'application/json'},  // Ensure proper content type
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // Pass the token as a Bearer token
+        },
       );
 
       if (response.statusCode == 200) {
@@ -90,7 +125,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         showSnackbar('Failed to fetch bill estimate: ${response.reasonPhrase}');
       }
     } catch (error) {
-      print('Error fetching bill estimate: $error');
       showSnackbar('Error: $error');
     }
   }
@@ -132,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Dashboard',
+          'Current Usage',
           style: TextStyle(
             color: Colors.white
           ),

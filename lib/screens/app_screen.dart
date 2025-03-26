@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techsavvy/features/dashboard/bill_estimation_screen.dart';
-import 'package:techsavvy/features/dashboard/dashboard_screen.dart';
-
 import 'package:iconsax/iconsax.dart';
-import 'package:techsavvy/features/dashboard/device_screen.dart';
-import 'package:techsavvy/features/dashboard/profile_screen.dart';
-// import 'package:techsavvy/features/dashboard/devices_screen.dart';
+import 'package:powersavy/screens/dashboard/dashboard_screen.dart';
+import 'package:powersavy/screens/devices/devices_screen.dart';
+import 'package:powersavy/screens/profile/profile_screen.dart';
+import 'package:powersavy/screens/rooms/rooms_screen.dart';
 
 class AppScreen extends StatefulWidget {
   const AppScreen({super.key});
@@ -26,7 +24,7 @@ class _AppScreenState extends State<AppScreen> {
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: const [DashboardScreen(), BillEstimationScreen(), DevicesScreen(), ProfileScreen()],
+        children: const[DashboardScreen(), RoomsScreen(), DevicesScreen(), ProfileSettingsScreen()],
       ),
       bottomNavigationBar: NavigationBar(
         height: 70.0,
@@ -38,9 +36,9 @@ class _AppScreenState extends State<AppScreen> {
           });
         },
         destinations: const[
-          NavigationDestination(icon: Icon(Iconsax.home), label: "Dashboard"),
-          NavigationDestination(icon: Icon(Iconsax.candle), label: "Bill Estimate"),
-          NavigationDestination(icon: Icon(Iconsax.devices), label: "Devices"),
+          NavigationDestination(icon: Icon(Iconsax.safe_home), label: "Dashboard"),
+          NavigationDestination(icon: Icon(Iconsax.building), label: "Rooms"),
+          NavigationDestination(icon: Icon(Iconsax.lamp), label: "Devices"),
           NavigationDestination(icon: Icon(Iconsax.user), label: "Profile")
         ],
       ),

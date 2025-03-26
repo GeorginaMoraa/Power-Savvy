@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
+import 'dart:convert'; // For JSON encoding
+import 'package:http/http.dart' as http; // For making API calls
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,29 +17,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  void _registerUser() async {
+  Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
       });
 
-      final response = await ApiService.registerUser(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        _nameController.text.trim(),
-      );
+      try {
+        final response = await http.post(
+          Uri.parse('https://power-savvy-backend.onrender.com/api/auth/register'), // Replace with your API endpoint
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'password': _passwordController.text.trim(),
+          }),
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        final responseData = jsonDecode(response.body);
 
-      if (response['success']) {
-        // Navigate to the login screen or dashboard
-        Navigator.pushReplacementNamed(context, '/login');
-      } else {
+        if (response.statusCode == 201) {
+          // Navigate to the login screen or dashboard
+          Navigator.pushReplacementNamed(context, '/login');
+        } else {
+          setState(() {
+            _errorMessage = responseData['message'] ?? 'Registration failed';
+          });
+        }
+      } catch (e) {
         setState(() {
-          _errorMessage = response['message'];
+          _errorMessage = 'An error occurred. Please try again.';
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
         });
       }
     }
@@ -49,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add padding to the entire form
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: SingleChildScrollView(
             child: Form(
               key: _formKey,
@@ -61,18 +74,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Full Name',
                       enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.black
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Colors.blue
-                            )
-                        ),
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
-                        vertical: 16.0, // Adjust vertical padding
-                        horizontal: 12.0, // Adjust horizontal padding
+                        vertical: 16.0,
+                        horizontal: 12.0,
                       ),
                     ),
                     validator: (value) {
@@ -88,15 +97,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.black
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Colors.blue
-                            )
-                        ),
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
                         vertical: 16.0,
                         horizontal: 12.0,
@@ -106,7 +111,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(value)) {
+                      if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
+                          .hasMatch(value)) {
                         return 'Please enter a valid email address';
                       }
                       return null;
@@ -118,15 +124,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Password',
                       enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.black
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                                color: Colors.blue
-                            )
-                        ),
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue),
+                      ),
                       contentPadding: EdgeInsets.symmetric(
                         vertical: 16.0,
                         horizontal: 12.0,
@@ -158,7 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             padding: const EdgeInsets.all(25),
                             margin: const EdgeInsets.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
-                              color: Colors.black,
+                              color: Colors.blue.shade900,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Center(
@@ -171,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                             ),
-                          )
+                          ),
                         ),
                   const SizedBox(height: 16),
                   TextButton(
